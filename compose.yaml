@@ -1,0 +1,38 @@
+services:
+  api-server:
+    build:
+      context: ./api-server
+    depends_on:
+      - card-database
+      - user-database
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+    develop:
+      watch:
+        - path: ./api-server/package.json
+          action: rebuild
+        - path: ./api-server
+          target: /usr/src/app
+          action: sync
+
+  card-database:
+    image: mysql:8.0
+    volumes:
+      - card-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: cards
+
+  user-database:
+    image: mysql:8.0
+    volumes:
+      - user-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: users
+
+volumes:
+  card-data:
+  user-data:
