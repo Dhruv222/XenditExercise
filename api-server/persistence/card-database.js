@@ -43,7 +43,7 @@ async function init() {
 
   return new Promise((acc, rej) => {
     pool.query(
-      "CREATE TABLE IF NOT EXISTS cards (id varchar(36) NOT NULL, cardNumber varchar(16) NOT NULL, expiryMonth integer NOT NULL, expiryYear integer NOT NULL, cardHolderName varchar(255) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARSET utf8mb4 " +
+      "CREATE TABLE IF NOT EXISTS cards (id varchar(36) NOT NULL, cardNumber varchar(16) NOT NULL, expiryMonth integer NOT NULL, expiryYear integer NOT NULL, cardHolderName varchar(255) NOT NULL, full_expiry varchar(7) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARSET utf8mb4 " +
         // "ENCRYPTION='Y'" +
         "",
       (err) => {
@@ -102,7 +102,7 @@ async function removeCard(card_id) {
 async function storeCard(card) {
   return new Promise((acc, rej) => {
     pool.query(
-      "INSERT INTO cards (id, cardNumber, expiryMonth, expiryYear, cardHolderName) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO cards (id, cardNumber, expiryMonth, expiryYear, cardHolderName, full_expiry) VALUES (?, ?, ?, ?, ?, CONCAT(expiryMonth,'/',expiryYear))",
       [
         card.id,
         card.cardNumber,
