@@ -45,33 +45,33 @@ services:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: users
 
-  # reminder-producer:
-  #   build:
-  #     context: ./reminder-producer
-  #   depends_on:
-  #     - card-database
-  #     - user-database
-  #     - rabbitmq
-  #   environment:
-  #     NODE_ENV: production
-  #     USER_MYSQL_HOST: user-database
-  #     USER_MYSQL_USER: root
-  #     USER_MYSQL_PASSWORD: secret
-  #     USER_MYSQL_DB: users
-  #     CARD_MYSQL_HOST: card-database
-  #     CARD_MYSQL_USER: root
-  #     CARD_MYSQL_PASSWORD: secret
-  #     CARD_MYSQL_DB: cards
-  #     RABBITMQ_HOST: rabbitmq
-  #     QUEUE_NAME: "notifications"
-  #   develop:
-  #     watch:
-  #       - path: ./reminder-producer/package.json
-  #         action: rebuild
-  #       - path: ./reminder-producer
-  #         target: /usr/src/app
-  #         action: sync
-  #   restart: "no"
+  reminder-producer:
+    build:
+      context: ./reminder-producer
+    depends_on:
+      - card-database
+      - user-database
+      - rabbitmq
+    environment:
+      NODE_ENV: production
+      USER_MYSQL_HOST: user-database
+      USER_MYSQL_USER: root
+      USER_MYSQL_PASSWORD: secret
+      USER_MYSQL_DB: users
+      CARD_MYSQL_HOST: card-database
+      CARD_MYSQL_USER: root
+      CARD_MYSQL_PASSWORD: secret
+      CARD_MYSQL_DB: cards
+      RABBITMQ_HOST: rabbitmq
+      QUEUE_NAME: "notifications"
+    develop:
+      watch:
+        - path: ./reminder-producer/package.json
+          action: rebuild
+        - path: ./reminder-producer
+          target: /usr/src/app
+          action: sync
+    restart: "no"
 
   reminder-consumer:
     build:
