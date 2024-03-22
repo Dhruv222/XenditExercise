@@ -43,7 +43,7 @@ async function init() {
 
   return new Promise((acc, rej) => {
     pool.query(
-      "CREATE TABLE IF NOT EXISTS cards (id varchar(36), cardNumber varchar(16), expiryMonth integer, expiryYear integer, cardHolderName varchar(255)) DEFAULT CHARSET utf8mb4 " +
+      "CREATE TABLE IF NOT EXISTS cards (id varchar(36) NOT NULL, cardNumber varchar(16) NOT NULL, expiryMonth integer NOT NULL, expiryYear integer NOT NULL, cardHolderName varchar(255) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARSET utf8mb4 " +
         // "ENCRYPTION='Y'" +
         "",
       (err) => {
