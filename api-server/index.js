@@ -15,7 +15,10 @@ app.get("/", (req, res) => {
 });
 
 app.post("/cards", async (req, res) => {
-  if (!req.body["card"] || !req.body.email) {
+  console.log("received the request with body:", req.body);
+
+  if (!req.body.card || !req.body.email) {
+    console.log("Missing card or email in body");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
@@ -24,6 +27,9 @@ app.post("/cards", async (req, res) => {
     !req.body.card.expiryDate ||
     !req.body.cardHolderName
   ) {
+    console.log(
+      "Missing cardNumber, expiryDate or cardHolderName in card object"
+    );
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
@@ -31,11 +37,13 @@ app.post("/cards", async (req, res) => {
     typeof req.body.card.cardHolderName != "string" ||
     typeof req.body.email != "string"
   ) {
+    console.log("cardHolderName or email are not string types");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
   //check if the card number is valid
   if (!validator.number(req.body.card.cardNumber).isValid) {
+    console.log("CardNumber is not valid");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
@@ -49,6 +57,7 @@ app.post("/cards", async (req, res) => {
     req.body.card.expiryDate.year >
       dateToday.setFullYear(dateToday.getFullYear() + 20)
   ) {
+    console.log("ExpiryDate is invalid");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
@@ -57,6 +66,7 @@ app.post("/cards", async (req, res) => {
     req.body.card.expiryDate.year === dateToday.getFullYear &&
     req.body.card.expiryDate.month < dateToday.getMonth() + 3
   ) {
+    console.log("expiryDate is within the next 3 months");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
   //create a user if it doesnt exist using the email as key
@@ -64,6 +74,7 @@ app.post("/cards", async (req, res) => {
   try {
     user = await usersDB.getUserByEmail(req.body.email);
   } catch (error) {
+    console.log("Error getting userByEmail: ", error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send("There was an error processing your request.");
@@ -77,7 +88,9 @@ app.post("/cards", async (req, res) => {
         id: user_id,
         email: req.body.email,
       });
+      console.log("created user with uuid:", user_id, email);
     } catch (error) {
+      console.log("Error creating a new user", error);
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .send("There was an error processing your request.");
@@ -96,7 +109,9 @@ app.post("/cards", async (req, res) => {
       expiry: req.body.expiryDate,
       cardHolderName: req.body.cardHolderName,
     });
+    console.log("able to store card data in the cardDB:", card_id);
   } catch (error) {
+    console.log("Error storing card data in teh card db:", error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send("There was an error processing your request.");
@@ -109,9 +124,19 @@ app.post("/cards", async (req, res) => {
       card_id,
       truncCardNumber: req.body.card.cardNumber.slice(0, 6),
     });
+    console.log(
+      "saved the data for user id and card id in the users DB",
+      card_id,
+      user_id,
+      req.body.card.cardNumber.slice(0, 6)
+    );
   } catch (error) {
+    console.log("Error storing the user and card data:", error);
     try {
       await cardsDB.removeCard(card_id);
+      console.log(
+        "removed the card data as the subsequent data failed to store"
+      );
     } catch (error) {
       console.log(
         "There was an error removing the card from the card table after the insertion to the Users DB failed"
