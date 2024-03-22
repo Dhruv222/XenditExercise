@@ -25,10 +25,13 @@ app.post("/cards", async (req, res) => {
   if (
     !req.body.card.cardNumber ||
     !req.body.card.expiryDate ||
-    !req.body.cardHolderName
+    !req.body.card.cardHolderName
   ) {
     console.log(
-      "Missing cardNumber, expiryDate or cardHolderName in card object"
+      "Missing cardNumber, expiryDate or cardHolderName in card object",
+      req.body.card.cardNumber,
+      req.body.card.expiryDate,
+      req.body.card.cardHolderName
     );
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
@@ -73,6 +76,7 @@ app.post("/cards", async (req, res) => {
   let user;
   try {
     user = await usersDB.getUserByEmail(req.body.email);
+    console.log("user query successful", user);
   } catch (error) {
     console.log("Error getting userByEmail: ", error);
     return res
@@ -88,9 +92,12 @@ app.post("/cards", async (req, res) => {
         id: user_id,
         email: req.body.email,
       });
-      console.log("created user with uuid:", user_id, email);
+      user = {
+        id: user_id,
+      };
+      console.log("created user with uuid:", user_id, req.body.email);
     } catch (error) {
-      console.log("Error creating a new user", error);
+      console.log("Error creating a new user", user_id, req.body.email, error);
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .send("There was an error processing your request.");
@@ -106,19 +113,26 @@ app.post("/cards", async (req, res) => {
     await cardsDB.storeCard({
       id: card_id,
       cardNumber: req.body.card.cardNumber, //excrypt this
-      expiry: req.body.expiryDate,
-      cardHolderName: req.body.cardHolderName,
+      expiry: req.body.card.expiryDate,
+      cardHolderName: req.body.card.cardHolderName,
     });
     console.log("able to store card data in the cardDB:", card_id);
   } catch (error) {
-    console.log("Error storing card data in teh card db:", error);
+    console.log("Error storing card data in the card db:", error);
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send("There was an error processing your request.");
   }
 
+  console.log("Storing card data in users db");
   //create an entry into the cards table in user database with the trunc card number, user id, token
   try {
+    console.log(
+      "saving the data for user id and card id in the users DB",
+      card_id,
+      user_id,
+      req.body.card.cardNumber.slice(0, 6)
+    );
     await usersDB.storeCardData({
       user_id,
       card_id,

@@ -95,7 +95,7 @@ async function getUserByEmail(email) {
 async function storeUser(user) {
   return new Promise((acc, rej) => {
     pool.query(
-      "INSERT INTO users (id, email) VALUES (?, ?) ON DUPLICATE KEY 0+0",
+      "INSERT INTO users (id, email) VALUES (?, ?)",
       [user.id, user.email],
       (err) => {
         if (err) return rej(err);
@@ -107,7 +107,16 @@ async function storeUser(user) {
 
 async function storeCardData(data) {
   return new Promise((acc, rej) => {
-    pool.query("INSERT INTO cards");
+    pool.query(
+      "INSERT INTO cards (card_id, user_id, trunc_card_number) VALUES (?, ?, ?)",
+      [data.card_id, data.user_id, data.truncCardNumber],
+      (err, rows) => {
+        if (err) {
+          return rej(err);
+        }
+        acc();
+      }
+    );
   });
 }
 
