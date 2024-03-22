@@ -1,0 +1,15 @@
+{
+  "name": "reminder-consumer",
+  "version": "1.0.0",
+  "description": "Server code to consume the tasks created for the card expiry notifications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  }
+}
