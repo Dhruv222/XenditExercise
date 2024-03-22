@@ -38,8 +38,7 @@ const main = async () => {
   console.log(`Found ${cardsToInform.length} cards to inform:`, cardsToInform);
 
   for (i = 0; i < cardsToInform.length; i++) {
-    await taskQ.createTask(process.env.MERCHANT_QUEUE_NAME, cardsToInform[i]);
-    await taskQ.createTask(process.env.CUSTOMER_QUEUE_NAME, cardsToInform[i]);
+    await taskQ.createTask(process.env.QUEUE_NAME, cardsToInform[i]);
   }
 };
 
