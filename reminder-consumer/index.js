@@ -72,3 +72,26 @@ const main = async () => {
     }
   );
 };
+
+const gracefulShutdown = () => {
+  taskQ
+    .teardown()
+    .then(() => {
+      return cardsDB.teardown();
+    })
+    .catch(() => {})
+    .then(() => process.exit());
+};
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGUSR2", gracefulShutdown);
+
+main()
+  .then(() => {
+    console.log("ran the code");
+  })
+  .catch((error) => {
+    console.log("error with main", error);
+  })
+  .finally(gracefulShutdown);
