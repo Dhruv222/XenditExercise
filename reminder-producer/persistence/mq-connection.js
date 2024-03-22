@@ -1,6 +1,6 @@
 const waitPort = require("wait-port");
 const fs = require("fs");
-const ampq = require("ampqlib");
+const ampq = require("amqplib");
 
 let connection;
 let channel;
