@@ -44,8 +44,11 @@ app.post("/cards", async (req, res) => {
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
 
-  //check if the card number is valid
-  if (!validator.number(req.body.card.cardNumber).isValid) {
+  //check if the card number is valid, skipping luhn validation -> easier to test card numbers
+  if (
+    !validator.number(req.body.card.cardNumber, { skipLuhnValidation: true })
+      .isValid
+  ) {
     console.log("CardNumber is not valid");
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
