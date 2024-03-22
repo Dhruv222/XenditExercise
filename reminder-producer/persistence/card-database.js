@@ -61,10 +61,14 @@ async function teardown() {
 }
 
 async function getCards(expiryDates) {
+  expiryDatesString = expiryDates
+    .reduce((acc, curr) => {
+      return acc + `'${curr}',`;
+    }, "")
+    .slice(0, -1);
   return new Promise((acc, rej) => {
     pool.query(
-      "SELECT id, full_expiry FROM cards WHERE full_expiry IN (?)",
-      [expiryDates.toString()],
+      `SELECT id, full_expiry FROM cards WHERE full_expiry IN (${expiryDatesString})`,
       (err, rows) => {
         if (err) return rej(err);
         acc(rows);
