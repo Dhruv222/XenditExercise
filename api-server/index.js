@@ -142,7 +142,7 @@ usersDB
       await usersDB.teardown();
       await cardsDB.teardown();
     } catch (error) {
-      console.log("error:", error);
+      console.log("error tearing down the db connections:", error);
     }
     console.error(err);
     process.exit(1);
