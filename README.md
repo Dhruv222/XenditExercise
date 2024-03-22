@@ -42,22 +42,22 @@ There you go, you have access to the first part of the exercise to store the car
 
 ## Services
 
-In the above image of Docker after you ran the `docker compose watch`, you should see 6 services under the XenditExercise group in the Containers Tab. Let's discuss what each of them does!
+In the above image of Docker after you run the `docker compose watch`, you should see 6 services under the XenditExercise group in the Containers Tab. Let's discuss what each of them does!
 
 ### API-Server
 
 This service creates the server that is responsible for accepting card data from the merchant and encrypting it as well as storing that information between two different MySQL database servers. There are 4 things to note here:
 
-1. The Data at Rest encryption is done when the tables are created at initialising of the service. But the code is commented out because it requires a 3rd party plugin to the [MySQL Keyring Configuration](https://dev.mysql.com/doc/refman/8.0/en/innodb-data-encryption.html). Which would require sharing of credentials.
+1. The Data at Rest encryption is done when the tables are created at the initialising of the service. But the code is commented out because it requires a 3rd party plugin to the [MySQL Keyring Configuration](https://dev.mysql.com/doc/refman/8.0/en/innodb-data-encryption.html). Which would require the sharing of credentials.
    1. ![alt text](image-4.png)
-2. The Data in Transit is also handled here through the ssl setup and usage of certificates. The code is again commented out because self-signed certificates are not accepted in the MySQL setup here. We would need to create certificates using a trusted authority.
+2. The Data in Transit is also handled here through the SSL setup and usage of certificates. The code is again commented out because self-signed certificates are not accepted in the MySQL setup here. We would need to create certificates using a trusted authority.
 3. The data is split across two servers because of the need to separate the PAN data as well as the truncated card number, along with other PII data. So the card data is stored in the card database and the user-database along with the relation is stored in user-database.
 4. I also wanted to double encrypt the PAN number, apart from the MySQL Data at Rest and Transit encryption. But that requires me to use a 3rd party like AWS KMS to store the key used and then would have to share the credentials. The comments are added in the **index.js(Line 113)** where the code would need to be added for encryption.
 
 ### Card-Database and User-Database
 
 1. These two databases store the information needed to store the card data as well as send notification reminders.
-2. In an production environment, they will have Keyring setup and that would encrypt them according to the PCI-DSS regualtions.
+2. In a production environment, they will have a Keyring setup that would encrypt them according to the PCI-DSS regulations.
 3. There are 3 tables built across these two database servers.
 
 #### Card Database
@@ -97,19 +97,19 @@ This is a script that will need to run either through a cronjob or something lik
 
 ### Reminder-Producer setup
 
-Apart from the setup above, `reminder-producer` does have a couple of notes for it to run. As it is more of a script, supposed to controlled through cronjob or a scheduling system, after the docker compose starts it up, it shuts down gracefully unlike `reminder-consumer` which is supposed to keep running.
+Apart from the setup above, `reminder-producer` does have a couple of notes for it to run. As it is more of a script, supposed to be controlled through cronjob or a scheduling system, after the docker compose starts it up, it shuts down gracefully unlike `reminder-consumer` which is supposed to keep running.
 
-1. So to check if the system is working as expected, you should restart this service through the Docker Desktop app after you have added some cards in the db. Make sure to add some cards that are expiring in the next 3 months.
+1. So to check if the system is working as expected, you should restart this service through the Docker Desktop app after you have added some cards in the DB. Make sure to add some cards that are expiring in the next 3 months.
 2. You can look at the logs here:
    ![alt text](image-5.png)
 3. The button is in the top right corner as indicated in the picture.
 
 ### Reminder-Consumer
 
-This is a worker service that connects to the `Rabbitmq` to send the emails and webhook calls. It also connects to the `user-database` to get the additional information such as _trunc_card_number_, _email_, etc. One thing to note, the code to send the email and call webhooks isn't present, as again that would require 3rd party integration and subsequent sharing of credentials. These can also be horizontally scaled to accomodate peak activity times.
+This is a worker service that connects to the `Rabbitmq` to send emails and webhook calls. It also connects to the `user-database` to get additional information such as _trunc_card_number_, _email_, etc. One thing to note, the code to send the email and call webhooks isn't present, as again that would require 3rd party integration and subsequent sharing of credentials. These can also be horizontally scaled to accommodate peak activity times.
 
 ## Limits
 
 Given the short amount of time, there are some limits to the system that would require more research to solve and implement. Here are 2 of them:
 
-1. It is possible to store the same card again in the system, the primary reason this is possible is because of the double encryption of the PAN that would require every PAN number to be decrypted to be compared to the input. I have thought about a hasing function and compare the hash values but again the problem is the [PCI DSS regulation](https://d30000001huxdea4.my.salesforce-sites.com/faq/articles/Frequently_Asked_Question/How-can-hashing-be-used-to-protect-Primary-Account-Numbers-PAN-and-in-what-circumstances-can-hashed-PANs-be-considered-out-of-scope-for-PCI-DSS#:~:text=PCI%20DSS%20requires%20that%20hashing,%2C%20or%20salt%2C%20be%20used.). I think there is definitely a way to do this by either storing the hash in the separate server/db, but I havent had the time to properly research about this.
+1. It is possible to store the same card again in the system, the primary reason this is possible is because of the double encryption of the PAN that would require every PAN number to be decrypted to be compared to the input. I have thought about a hashing function and comparing the hash values but again the problem is the [PCI DSS regulation](https://d30000001huxdea4.my.salesforce-sites.com/faq/articles/Frequently_Asked_Question/How-can-hashing-be-used-to-protect-Primary-Account-Numbers-PAN-and-in-what-circumstances-can-hashed-PANs-be-considered-out-of-scope-for-PCI-DSS#:~:text=PCI%20DSS%20requires%20that%20hashing,%2C%20or%20salt%2C%20be%20used.). I think there is definitely a way to do this by either storing the hash in the separate server/db, but I haven't had the time to properly research this.
