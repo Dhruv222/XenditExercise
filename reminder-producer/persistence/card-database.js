@@ -63,17 +63,11 @@ async function teardown() {
 async function getCards(expiryDates) {
   return new Promise((acc, rej) => {
     pool.query(
-      "SELECT id, CONCAT(expiryMonth,'/',expiryYear) as full_expiry FROM cards WHERE full_expiry IN (?)",
+      "SELECT id, full_expiry FROM cards WHERE full_expiry IN (?)",
       [expiryDates.toString()],
       (err, rows) => {
         if (err) return rej(err);
-        acc(
-          rows.map((item) =>
-            Object.assign({}, item, {
-              completed: item.completed === 1,
-            })
-          )
-        );
+        acc(rows);
       }
     );
   });
