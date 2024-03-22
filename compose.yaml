@@ -7,6 +7,14 @@ services:
       - user-database
     environment:
       NODE_ENV: production
+      USER_MYSQL_HOST: user-database
+      USER_MYSQL_USER: root
+      USER_MYSQL_PASSWORD: secret
+      USER_MYSQL_DB: users
+      CARD_MYSQL_HOST: card-database
+      CARD_MYSQL_USER: root
+      CARD_MYSQL_PASSWORD: secret
+      CARD_MYSQL_DB: cards
     ports:
       - 3000:3000
     develop:
@@ -21,6 +29,8 @@ services:
     image: mysql:8.0
     volumes:
       - card-data:/var/lib/mysql
+    ports:
+      - 3307:3306
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: cards
@@ -29,6 +39,8 @@ services:
     image: mysql:8.0
     volumes:
       - user-data:/var/lib/mysql
+    ports:
+      - 3308:3306
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: users

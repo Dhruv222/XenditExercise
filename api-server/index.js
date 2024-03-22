@@ -1,8 +1,9 @@
 const express = require("express");
 const { StatusCodes } = require("http-status-codes");
 const validator = require("card-validator");
-const app = express();
+const { cardsDB, usersDB } = require("./persistence");
 
+const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -66,6 +67,39 @@ app.post("/cards", (req, res) => {
   res.send("All Good");
 });
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+usersDB
+  .init()
+  .then(() => {
+    console.log("Connected to the Users DB");
+    return cardsDB.init();
+  })
+  .then(() => {
+    console.log("Connected to the Cards DB");
+    app.listen(port, () => {
+      console.log(`App listening on port ${port}`);
+    });
+  })
+  .catch(async (err) => {
+    try {
+      await usersDB.teardown();
+      await cardsDB.teardown();
+    } catch (error) {
+      console.log("error:", error);
+    }
+    console.error(err);
+    process.exit(1);
+  });
+
+const gracefulShutdown = () => {
+  usersDB
+    .teardown()
+    .then(() => {
+      return cardsDB.teardown();
+    })
+    .catch(() => {})
+    .then(() => process.exit());
+};
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGUSR2", gracefulShutdown);

@@ -39,12 +39,12 @@ async function init() {
 
   return new Promise((acc, rej) => {
     pool.query(
-      "CREATE TABLE IF NOT EXISTS users (id varchar(36), email varchar(255)) DEFAULT CHARSET utf8mb4",
+      "CREATE TABLE IF NOT EXISTS users (id varchar(36), email varchar(255)) DEFAULT CHARSET utf8mb4 ENCRYPTION='Y'",
       (err) => {
         if (err) return rej(err);
 
         pool.query(
-          "CREATE TABLE IF NOT EXISTS cards (user_id varchar(36), card_id varchar(36)) DEFAULT CHARSET utf8mb4",
+          "CREATE TABLE IF NOT EXISTS cards (user_id varchar(36), card_id varchar(36), trunc_card_number varchar(16)) DEFAULT CHARSET utf8mb4 ENCRYPTION='Y'",
           (err) => {
             if (err) return rej(err);
 
