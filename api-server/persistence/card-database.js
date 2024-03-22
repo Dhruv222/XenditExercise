@@ -35,6 +35,10 @@ async function init() {
     password,
     database,
     charset: "utf8mb4",
+    // ssl: {
+    //   ca: fs.readFileSync("/etc/certs/ca.crt"),
+    //   rejectUnauthorized: false,
+    // },
   });
 
   return new Promise((acc, rej) => {
