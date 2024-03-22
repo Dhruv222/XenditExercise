@@ -25,7 +25,7 @@ const main = async () => {
   for (i = 0; i < 3; i++) {
     let date = new Date();
     date.setMonth(date.getMonth() + i + 1);
-    expiryDatesToInform.push(`${date.getMonth}/${date.getFullYear}`);
+    expiryDatesToInform.push(`${date.getMonth()}/${date.getFullYear()}`);
   }
   console.log("INforming the following expiry dates:", expiryDatesToInform);
 
@@ -37,8 +37,12 @@ const main = async () => {
   }
   console.log(`Found ${cardsToInform.length} cards to inform:`, cardsToInform);
 
+  console.log(process.env.QUEUE_NAME, typeof process.env.QUEUE_NAME);
   for (i = 0; i < cardsToInform.length; i++) {
-    await taskQ.createTask(process.env.QUEUE_NAME, cardsToInform[i]);
+    await taskQ.createTask(
+      process.env.QUEUE_NAME,
+      Buffer.from(JSON.stringify(cardsToInform[i]))
+    );
   }
 };
 
