@@ -6,13 +6,13 @@ const main = async () => {
   try {
     await usersDB.init();
   } catch (error) {
-    console.log("Error connecting to cards DB", error);
+    console.log("Error connecting to users DB", error);
     throw new Error("Error connecting to the DB");
   }
 
   let connection;
   try {
-    connection = amqp.connect("amqp://" + process.env.RABBITMQ_HOST);
+    connection = await amqp.connect("amqp://" + process.env.RABBITMQ_HOST);
   } catch (error) {
     console.log("Error connecting to the queue", error);
     throw new Error("Error connecting to the Queue");
@@ -32,7 +32,7 @@ const main = async () => {
   }
 
   console.log("Starting to consume messages");
-  channel.consume(
+  await channel.consume(
     queue_name,
     async (msg) => {
       console.log("got a message:", msg);
@@ -43,7 +43,7 @@ const main = async () => {
       let userCardData;
       try {
         userCardData = await usersDB.getUserCardById(data.id);
-        console.log("userCardData:".userCardData);
+        console.log("userCardData:", userCardData);
       } catch (error) {
         console.log("Error getting user id and trunc number", error);
         throw new Error("Error connecting to DB");
@@ -53,7 +53,7 @@ const main = async () => {
       let userData;
       try {
         userData = await usersDB.getUserById(userCardData.user_id);
-        console.log("userData:".userData);
+        console.log("userData:", userData);
       } catch (error) {
         console.log("Error getting user data");
         throw new Error("Error connecting to DB");
@@ -74,10 +74,12 @@ const main = async () => {
 };
 
 const gracefulShutdown = () => {
-  taskQ
+  console.log("gracefully shutdown");
+  usersDB
     .teardown()
-    .then(() => {
-      return cardsDB.teardown();
+    .then(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return connection.close();
     })
     .catch(() => {})
     .then(() => process.exit());
@@ -93,5 +95,4 @@ main()
   })
   .catch((error) => {
     console.log("error with main", error);
-  })
-  .finally(gracefulShutdown);
+  });
