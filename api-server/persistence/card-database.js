@@ -43,7 +43,9 @@ async function init() {
 
   return new Promise((acc, rej) => {
     pool.query(
-      "CREATE TABLE IF NOT EXISTS cards (id varchar(36), cardNumber varchar(16), expiryMonth integer, expiryYear integer, cardHolderName varchar(255)) DEFAULT CHARSET utf8mb4 ENCRYPTION='Y'",
+      "CREATE TABLE IF NOT EXISTS cards (id varchar(36), cardNumber varchar(16), expiryMonth integer, expiryYear integer, cardHolderName varchar(255)) DEFAULT CHARSET utf8mb4 " +
+        // "ENCRYPTION='Y'" +
+        "",
       (err) => {
         if (err) return rej(err);
 
@@ -67,7 +69,7 @@ async function teardown() {
  *
  * @returns TODO
  */
-async function getItems() {
+async function getCards() {
   return new Promise((acc, rej) => {
     pool.query("SELECT * FROM cards", (err, rows) => {
       if (err) return rej(err);
@@ -82,7 +84,22 @@ async function getItems() {
   });
 }
 
-async function storeItem(card) {
+async function removeCard(card_id) {
+  return new Promise((acc, rej) => {
+    pool.query("DELETE from cards WHERE card_id=?", [card_id], (err, rows) => {
+      if (err) return rej(err);
+      acc(
+        rows.map((item) =>
+          Object.assign({}, item, {
+            completed: item.completed === 1,
+          })
+        )
+      );
+    });
+  });
+}
+
+async function storeCard(card) {
   return new Promise((acc, rej) => {
     pool.query(
       "INSERT INTO cards (id, cardNumber, expiryMonth, expiryYear, cardHolderName) VALUES (?, ?, ?, ?, ?)",
@@ -104,6 +121,7 @@ async function storeItem(card) {
 module.exports = {
   init,
   teardown,
-  getItems,
-  storeItem,
+  getCards,
+  storeCard,
+  removeCard,
 };

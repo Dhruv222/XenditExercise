@@ -1,6 +1,7 @@
 const express = require("express");
 const { StatusCodes } = require("http-status-codes");
 const validator = require("card-validator");
+const uuid = require("uuid");
 const { cardsDB, usersDB } = require("./persistence");
 
 const app = express();
@@ -13,7 +14,7 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.post("/cards", (req, res) => {
+app.post("/cards", async (req, res) => {
   if (!req.body["card"] || !req.body.email) {
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
@@ -59,12 +60,69 @@ app.post("/cards", (req, res) => {
     return res.status(StatusCodes.BAD_REQUEST).send("Bad request data");
   }
   //create a user if it doesnt exist using the email as key
-  //create the token for the encrypted card data needed below, UUID?
-  //create an entry into the cards table in user database with the trunc card number, user id, token
+  let user;
+  try {
+    user = await usersDB.getUser(req.body.email);
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send("There was an error processing your request.");
+  }
+
+  let user_id;
+  if (!user) {
+    try {
+      user_id = uuid.v4();
+      await usersDB.storeUser({
+        id: user_id,
+        email: req.body.email,
+      });
+    } catch (error) {
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send("There was an error processing your request.");
+    }
+  }
+
+  user_id = user.id;
+  let card_id = uuid.v4(); //create the token for the encrypted card data needed below, UUID?
+
   //Encrypt the card number you are sending through to card database, need to use a key to encrypt
   //might have to store that key in one of the files on the server, write a note for the lack of KMS
-  //send the token back to the user
-  res.send("All Good");
+  try {
+    await cardsDB.storeCard({
+      id: card_id,
+      cardNumber: req.body.card.cardNumber, //excrypt this
+      expiry: req.body.expiryDate,
+      cardHolderName: req.body.cardHolderName,
+    });
+  } catch (error) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send("There was an error processing your request.");
+  }
+
+  //create an entry into the cards table in user database with the trunc card number, user id, token
+  try {
+    await usersDB.storeCardData({
+      user_id,
+      card_id,
+      truncCardNumber: req.body.card.cardNumber.slice(0, 6),
+    });
+  } catch (error) {
+    try {
+      await cardsDB.removeCard(card_id);
+    } catch (error) {
+      console.log(
+        "There was an error removing the card from the card table after the insertion to the Users DB failed"
+      );
+    }
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send("There was an error processing your request.");
+  }
+
+  res.send(card_id);
 });
 
 usersDB

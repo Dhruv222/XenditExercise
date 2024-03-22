@@ -43,12 +43,16 @@ async function init() {
 
   return new Promise((acc, rej) => {
     pool.query(
-      "CREATE TABLE IF NOT EXISTS users (id varchar(36), email varchar(255)) DEFAULT CHARSET utf8mb4 ENCRYPTION='Y'",
+      "CREATE TABLE IF NOT EXISTS users (id varchar(36) NOT NULL, email varchar(255) NOT NULL, PRIMARY KEY(email)) DEFAULT CHARSET utf8mb4 " +
+        // "ENCRYPTION='Y'" +
+        "",
       (err) => {
         if (err) return rej(err);
 
         pool.query(
-          "CREATE TABLE IF NOT EXISTS cards (user_id varchar(36), card_id varchar(36), trunc_card_number varchar(16)) DEFAULT CHARSET utf8mb4 ENCRYPTION='Y'",
+          "CREATE TABLE IF NOT EXISTS cards (user_id varchar(36) NOT NULL, card_id varchar(36) NOT NULL, trunc_card_number varchar(16) NOT NULL, CONSTRAINT userCard PRIMARY KEY (user_id,card_id)) DEFAULT CHARSET utf8mb4 " +
+            // "ENCRYPTION='Y'" +
+            "",
           (err) => {
             if (err) return rej(err);
 
@@ -91,7 +95,7 @@ async function getUser(email) {
 async function storeUser(user) {
   return new Promise((acc, rej) => {
     pool.query(
-      "INSERT INTO users (id, email) VALUES (?, ?)",
+      "INSERT INTO users (id, email) VALUES (?, ?) ON DUPLICATE KEY 0+0",
       [user.id, user.email],
       (err) => {
         if (err) return rej(err);
@@ -101,10 +105,17 @@ async function storeUser(user) {
   });
 }
 
+async function storeCardData(data) {
+  return new Promise((acc, rej) => {
+    pool.query("INSERT INTO cards");
+  });
+}
+
 module.exports = {
   init,
   teardown,
   getUsers,
   getUser,
   storeUser,
+  storeCardData,
 };
