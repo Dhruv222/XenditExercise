@@ -63,6 +63,7 @@ services:
       CARD_MYSQL_PASSWORD: secret
       CARD_MYSQL_DB: cards
       RABBITMQ_HOST: rabbitmq
+      QUEUE_NAME: "notifications"
     develop:
       watch:
         - path: ./reminder-producer/package.json
@@ -89,11 +90,27 @@ services:
       CARD_MYSQL_PASSWORD: secret
       CARD_MYSQL_DB: cards
       RABBITMQ_HOST: rabbitmq
+      QUEUE_NAME: "notifications"
     develop:
       watch:
         - path: ./reminder-consumer/package.json
           action: rebuild
         - path: ./reminder-consumer
+          target: /usr/src/app
+          action: sync
+
+  client-webhook:
+    build:
+      context: ./client-webhook
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3001:3000
+    develop:
+      watch:
+        - path: ./client-webhook/package.json
+          action: rebuild
+        - path: ./client-webhook
           target: /usr/src/app
           action: sync
 
