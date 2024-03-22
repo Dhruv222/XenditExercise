@@ -62,7 +62,7 @@ app.post("/cards", async (req, res) => {
   //create a user if it doesnt exist using the email as key
   let user;
   try {
-    user = await usersDB.getUser(req.body.email);
+    user = await usersDB.getUserByEmail(req.body.email);
   } catch (error) {
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)

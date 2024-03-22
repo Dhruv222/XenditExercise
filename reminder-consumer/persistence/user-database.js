@@ -42,26 +42,10 @@ async function init() {
   });
 
   return new Promise((acc, rej) => {
-    pool.query(
-      "CREATE TABLE IF NOT EXISTS users (id varchar(36) NOT NULL, email varchar(255) NOT NULL, PRIMARY KEY(email)) DEFAULT CHARSET utf8mb4 " +
-        // "ENCRYPTION='Y'" +
-        "",
-      (err) => {
-        if (err) return rej(err);
-
-        pool.query(
-          "CREATE TABLE IF NOT EXISTS cards (user_id varchar(36) NOT NULL, card_id varchar(36) NOT NULL, trunc_card_number varchar(16) NOT NULL, CONSTRAINT userCard PRIMARY KEY (user_id,card_id)) DEFAULT CHARSET utf8mb4 " +
-            // "ENCRYPTION='Y'" +
-            "",
-          (err) => {
-            if (err) return rej(err);
-
-            console.log(`Connected to users db at host ${HOST}`);
-            acc();
-          }
-        );
-      }
-    );
+    pool.query("show tables", (err) => {
+      if (err) return rej(err);
+      acc();
+    });
   });
 }
 
@@ -74,48 +58,27 @@ async function teardown() {
   });
 }
 
-async function getUsers() {
+async function getUserById(id) {
   return new Promise((acc, rej) => {
-    pool.query("SELECT * FROM users", (err, rows) => {
-      if (err) return rej(err);
-      acc(rows);
-    });
-  });
-}
-
-async function getUserByEmail(email) {
-  return new Promise((acc, rej) => {
-    pool.query("SELECT * FROM users WHERE email=?", [email], (err, rows) => {
+    pool.query("SELECT * FROM users WHERE id=?", [id], (err, rows) => {
       if (err) return rej(err);
       acc(rows[0]);
     });
   });
 }
 
-async function storeUser(user) {
+async function getUserCardById(id) {
   return new Promise((acc, rej) => {
-    pool.query(
-      "INSERT INTO users (id, email) VALUES (?, ?) ON DUPLICATE KEY 0+0",
-      [user.id, user.email],
-      (err) => {
-        if (err) return rej(err);
-        acc();
-      }
-    );
-  });
-}
-
-async function storeCardData(data) {
-  return new Promise((acc, rej) => {
-    pool.query("INSERT INTO cards");
+    pool.query("SELECT * FROM cards WHERE card_id=?", [id], (err, rows) => {
+      if (err) return rej(err);
+      acc(rows[0]);
+    });
   });
 }
 
 module.exports = {
   init,
   teardown,
-  getUsers,
-  getUserByEmail,
-  storeUser,
-  storeCardData,
+  getUserCardById,
+  getUserById,
 };

@@ -71,6 +71,7 @@ services:
         - path: ./reminder-producer
           target: /usr/src/app
           action: sync
+    restart: "no"
 
   reminder-consumer:
     build:
