@@ -1,29 +1,56 @@
 #!/usr/bin/env node
-const amqp = require("amqplib");
+
+/**
+ * Script to be run at the start of every month, e.g; Aug 1, Sep 1 etc
+ * Set it up through a cron job or lambdas work as well
+ */
 const { cardsDB, taskQ } = require("./persistence");
 
-let mqConnection;
-cardsDB
-  .init()
+const main = async () => {
+  try {
+    await cardsDB.init();
+  } catch (error) {
+    console.log("Error connecting to cards DB", error);
+    throw new Error("Error connecting to the DB");
+  }
+
+  try {
+    await taskQ.init();
+  } catch (error) {
+    console.log("error connecting to the queue", error);
+    throw new Error("Error connecting to the queue");
+  }
+
+  let expiryDatesToInform = [];
+  for (i = 0; i < 3; i++) {
+    let date = new Date();
+    date.setMonth(date.getMonth() + i + 1);
+    expiryDatesToInform.push(`${date.getMonth}/${date.getFullYear}`);
+  }
+  console.log("INforming the following expiry dates:", expiryDatesToInform);
+
+  let cardsToInform;
+  try {
+    cardsToInform = await cardsDB.getCards(expiryDatesToInform);
+  } catch (error) {
+    console.log("Error getting cards with close expiry dates", error);
+  }
+  console.log(`Found ${cardsToInform.length} cards to inform:`, cardsToInform);
+
+  for (i = 0; i < cardsToInform.length; i++) {
+    await taskQ.createTask(process.env.MERCHANT_QUEUE_NAME, cardsToInform[i]);
+    await taskQ.createTask(process.env.CUSTOMER_QUEUE_NAME, cardsToInform[i]);
+  }
+};
+
+main()
   .then(() => {
-    console.log("Connected to the Cards DB, connecting to the task queue");
-    return taskQ.init();
+    console.log("Notifications queued successfully");
   })
-  .then(() => {
-    console.log("Connected to the Queue");
+  .catch((error) => {
+    console.log("Error running the script", error);
   })
-  .catch(async (error) => {
-    console.log(
-      "error connecting to the DB or RabbitMQ, shutting down the server"
-    );
-    try {
-      await cardsDB.teardown();
-      await taskQ.teardown();
-    } catch (error) {
-      console.log("Error in teardown", error);
-    }
-    process.exit(1);
-  });
+  .finally(gracefulShutdown);
 
 const gracefulShutdown = () => {
   taskQ
