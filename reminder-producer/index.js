@@ -42,15 +42,6 @@ const main = async () => {
   }
 };
 
-main()
-  .then(() => {
-    console.log("Notifications queued successfully");
-  })
-  .catch((error) => {
-    console.log("Error running the script", error);
-  })
-  .finally(gracefulShutdown);
-
 const gracefulShutdown = () => {
   taskQ
     .teardown()
@@ -60,6 +51,15 @@ const gracefulShutdown = () => {
     .catch(() => {})
     .then(() => process.exit());
 };
+
+main()
+  .then(() => {
+    console.log("Notifications queued successfully");
+  })
+  .catch((error) => {
+    console.log("Error running the script", error);
+  })
+  .finally(gracefulShutdown);
 
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
