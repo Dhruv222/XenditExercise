@@ -63,7 +63,7 @@ services:
       CARD_MYSQL_PASSWORD: secret
       CARD_MYSQL_DB: cards
       RABBITMQ_HOST: rabbitmq
-      QUEUE_NAME: "notifications"
+      QUEUE_NAME: notifications
     develop:
       watch:
         - path: ./reminder-producer/package.json
